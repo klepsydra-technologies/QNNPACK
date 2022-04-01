@@ -53,10 +53,6 @@ SET(CONFU_DEPENDENCIES_SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps"
 SET(CONFU_DEPENDENCIES_BINARY_DIR "${CMAKE_BINARY_DIR}/deps"
   CACHE PATH "Confu-style dependencies binary directory")
 
-IF(NOT DEFINED CLOG_SOURCE_DIR)
-  SET(CLOG_SOURCE_DIR "${PROJECT_SOURCE_DIR}/deps/clog")
-ENDIF()
-
 IF(NOT DEFINED CPUINFO_SOURCE_DIR)
   MESSAGE(STATUS "Downloading cpuinfo to ${CONFU_DEPENDENCIES_SOURCE_DIR}/cpuinfo (define CPUINFO_SOURCE_DIR to avoid it)")
   CONFIGURE_FILE(cmake/DownloadCpuinfo.cmake "${CONFU_DEPENDENCIES_BINARY_DIR}/cpuinfo-download/CMakeLists.txt")
@@ -271,18 +267,6 @@ TARGET_INCLUDE_DIRECTORIES(qnnpack PUBLIC include)
 TARGET_INCLUDE_DIRECTORIES(qnnpack PRIVATE src)
 SET_TARGET_PROPERTIES(qnnpack PROPERTIES PUBLIC_HEADER include/qnnpack.h)
 
-# ---[ Configure clog
-IF(NOT TARGET clog)
-  SET(CLOG_BUILD_TESTS OFF CACHE BOOL "")
-  SET(CLOG_RUNTIME_TYPE "${CPUINFO_RUNTIME_TYPE}" CACHE STRING "")
-  ADD_SUBDIRECTORY(
-    "${CLOG_SOURCE_DIR}"
-    "${CONFU_DEPENDENCIES_BINARY_DIR}/clog")
-  # We build static version of clog but a dynamic library may indirectly depend on it
-  SET_PROPERTY(TARGET clog PROPERTY POSITION_INDEPENDENT_CODE ON)
-ENDIF()
-TARGET_LINK_LIBRARIES(qnnpack PRIVATE clog)
-
 # ---[ Configure cpuinfo
 IF(NOT TARGET cpuinfo)
   SET(CPUINFO_BUILD_TOOLS OFF CACHE BOOL "")
@@ -294,6 +278,7 @@ IF(NOT TARGET cpuinfo)
     "${CONFU_DEPENDENCIES_BINARY_DIR}/cpuinfo")
 ENDIF()
 TARGET_LINK_LIBRARIES(qnnpack PRIVATE cpuinfo)
+TARGET_LINK_LIBRARIES(qnnpack PRIVATE clog)
 
 # ---[ Configure pthreadpool
 IF(NOT TARGET pthreadpool)
